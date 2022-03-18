@@ -65,6 +65,10 @@ def build_pyramid(image: np.ndarray, num_levels: int) -> list[np.ndarray]:
     """
     pyramid = [image.copy()]
     """INSERT YOUR CODE HERE."""
+    for i in range (1,num_levels+1):
+        temp = signal.convolve2d(pyramid[i-1],PYRAMID_FILTER,boundary='symm',mode= 'same')
+        temp2 = temp[:,:,2]
+        pyramid.append(temp2)
     return pyramid
 
 
@@ -107,8 +111,32 @@ def lucas_kanade_step(I1: np.ndarray,
     """INSERT YOUR CODE HERE.
     Calculate du and dv correctly.
     """
+    Ix = signal.convolve2d(I2,X_DERIVATIVE_FILTER,boundary='symm',mode= 'same') 
+    Iy = signal.convolve2d(I2,Y_DERIVATIVE_FILTER,boundary='symm',mode= 'same') 
+    It = I2 - I1
+    h, w = I1.shape
     du = np.zeros(I1.shape)
     dv = np.zeros(I1.shape)
+    half_window = window_size//2
+    res = window_size - half_window
+    for i in range (half_window,h-res):
+        for j in range (half_window,w-res):
+            Ix_window = Ix[i -half_window:i + res,j -half_window:j + res].flatten()
+            Iy_window = Iy[i -half_window:i + res,j -half_window:j + res].flatten()
+            It_window = It[i -half_window:i + res,j -half_window:j + res].flatten()
+            A= np.vstack((Ix_window,Iy_window)).T
+            try:
+                A_traspose_A = np.dot(np.transpose(A),A)
+                AA_inv= np.linalg.inv(A_traspose_A)
+                AA_inv_A= np.dot(AA_inv,np.transpose(A))
+            
+           
+                delta_p = -np.dot (AA_inv_A,It_window)
+            except:
+                delta_p=(0,0)
+
+            du[i][j]+= delta_p[0] 
+            dv[i][j] += delta_p[1] 
     return du, dv
 
 
@@ -145,6 +173,23 @@ def warp_image(image: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
     """INSERT YOUR CODE HERE.
     Replace image_warp with something else.
     """
+    h, w = image.shape
+    h_scale, w_scale = (h// u.shape[0], w // u.shape[1])
+    dsize= image.T.shape
+    u = cv2.resize(u,dsize=dsize) * h_scale#, fx= h_scale, fy= w_scale)
+    v = cv2.resize(v,dsize=dsize) * w_scale#, fx= h_scale, fy= w_scale)
+    x= [i for i in range(h)]
+    y= [i for i in range(w)]
+    xv,yv =np.meshgrid(y,x)
+    xv_u = xv +u
+    yv_v = yv + v
+    image_warp = griddata((xv.flatten(),yv.flatten()),image.flatten(),(xv_u.flatten(),yv_v.flatten()), method= 'linear')
+    image_warp = image_warp.reshape(image.shape)
+    gone_pixl = np.argwhere(np.isnan(image_warp))
+    if len(gone_pixl)>0:
+        for cord in gone_pixl:
+            image_warp[cord[0],cord[1]] = image[cord[0],cord[1]]
+    gone_pixl = np.argwhere(np.isnan(image_warp))
     return image_warp
 
 
