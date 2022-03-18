@@ -67,7 +67,7 @@ def build_pyramid(image: np.ndarray, num_levels: int) -> list[np.ndarray]:
     """INSERT YOUR CODE HERE."""
     for i in range (1,num_levels+1):
         temp = signal.convolve2d(pyramid[i-1],PYRAMID_FILTER,boundary='symm',mode= 'same')
-        temp2 = temp[:,:,2]
+        temp2 = temp[::2,: : 2]
         pyramid.append(temp2)
     return pyramid
 
@@ -250,8 +250,21 @@ def lucas_kanade_optical_flow(I1: np.ndarray,
     v = np.zeros(pyarmid_I2[-1].shape)
     """INSERT YOUR CODE HERE.
        Replace u and v with their true value."""
-    u = np.zeros(I1.shape)
-    v = np.zeros(I1.shape)
+
+    #mybe we dont need this
+    #######################
+    #u = np.zeros(I1.shape)
+    #v = np.zeros(I1.shape)
+    for i in range(num_levels ,0,-1):
+        temp_u,temp_v = lucas_kanade_step(pyramid_I1[i],pyarmid_I2[i],window_size)
+        u+= temp_u
+        v+= temp_v
+        dsize = (pyramid_I1[i].T.shape[0]*2,pyramid_I1[i].T.shape[1]*2)
+        u = cv2.resize(u,dsize=dsize) * 2#, fx= h_scale, fy= w_scale)
+        v = cv2.resize(v,dsize=dsize) * 2#, fx= h_scale, fy= w_scale)
+        #temp_I2_warp = warp_image(pyramid_I1[i],u,v)
+
+    
     return u, v
 
 
@@ -372,6 +385,8 @@ def faster_lucas_kanade_optical_flow(
     v = np.zeros(pyarmid_I2[-1].shape)  # create v in the size of smallest image
     """INSERT YOUR CODE HERE.
     Replace u and v with their true value."""
+    
+
     u = np.zeros(I1.shape)
     v = np.zeros(I1.shape)
     return u, v
