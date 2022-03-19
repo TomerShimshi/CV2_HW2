@@ -1,3 +1,4 @@
+from re import M
 import cv2
 import numpy as np
 from tqdm import tqdm
@@ -319,7 +320,60 @@ def lucas_kanade_video_stabilization(input_video_path: str,
        all windows.
     """
     """INSERT YOUR CODE HERE."""
-    pass
+    cap = cv2.VideoCapture(input_video_path)
+    parameters = get_video_parameters(cap)
+    ret,frame = cap.read()
+    
+    h_factor = int(np.ceil(frame.shape[0] / (2 ** (num_levels - 1 + 1))))
+    w_factor = int(np.ceil(frame.shape[1] / (2 ** (num_levels - 1 + 1))))
+    IMAGE_SIZE = (w_factor * (2 ** (num_levels - 1 + 1)),
+                  h_factor * (2 ** (num_levels - 1 + 1)))
+    out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((frame.shape[1], frame.shape[0])), isColor=False)
+    if ret: 
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+    out.write(gray)
+    if frame.shape != IMAGE_SIZE:
+        I1 = cv2.resize(gray, IMAGE_SIZE)
+    u = np.zeros(gray.shape)
+    v = np.zeros(gray.shape)
+    half_window = window_size//2
+    res = window_size - half_window
+    # running the loop 
+    i= 0
+    while cap.isOpened(): 
+        print('running frame number {}'.format(i))
+        # extracting the frames 
+        ret, img = cap.read() 
+
+        # converting to gray-scale 
+        
+
+        if ret:
+            
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+            if img.shape != IMAGE_SIZE:
+                I2 = cv2.resize(gray, IMAGE_SIZE)
+            temp_u,temp_v = lucas_kanade_optical_flow(I1,I2,window_size=window_size,max_iter=max_iter,num_levels=num_levels)
+            temp_u= temp_u[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
+            temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
+            mean_temp_u = np.mean(temp_u)
+            mean_temp_v = np.mean(temp_v)
+            temp_ones = np.ones(u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res].shape)
+            u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones *mean_temp_u
+            v[half_window:  -res,half_window:-res] += temp_ones*mean_temp_v
+            I2_warp= np.uint8(warp_image(gray,u,v))
+            # displaying the video 
+            cv2.imshow("Live", I2_warp) 
+            # write to gray-scale 
+            out.write(I2_warp)
+            I1= I2
+            i+=1
+        else:
+            break
+    
+    cv2.destroyAllWindows() 
+    cap.release()
+    out.release()
 
 
 def faster_lucas_kanade_step(I1: np.ndarray,
