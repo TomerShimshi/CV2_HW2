@@ -331,7 +331,7 @@ def lucas_kanade_video_stabilization(input_video_path: str,
     out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((frame.shape[1], frame.shape[0])), isColor=False)
     if ret: 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
-    out.write(gray)
+    out.write(np.uint8(gray))
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
     u = np.zeros(gray.shape)
@@ -340,14 +340,15 @@ def lucas_kanade_video_stabilization(input_video_path: str,
     res = window_size - half_window
     # running the loop 
     i= 0
+    pbar = tqdm(total=79)
     while cap.isOpened(): 
-        print('running frame number {}'.format(i))
+        #print('running frame number {}'.format(i))
         # extracting the frames 
         ret, img = cap.read() 
 
         # converting to gray-scale 
         
-
+        
         if ret:
             
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
@@ -358,16 +359,18 @@ def lucas_kanade_video_stabilization(input_video_path: str,
             temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
             mean_temp_u = np.mean(temp_u)
             mean_temp_v = np.mean(temp_v)
-            temp_ones = np.ones(u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res].shape)
-            u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones *mean_temp_u
-            v[half_window:  -res,half_window:-res] += temp_ones*mean_temp_v
+            #temp_ones = np.ones(u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res].shape)
+            #u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones *mean_temp_u
+            #v[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones*mean_temp_v
+            u+= np.ones(u.shape)* mean_temp_u
+            v+= np.ones(u.shape)* mean_temp_v
             I2_warp= np.uint8(warp_image(gray,u,v))
             # displaying the video 
-            cv2.imshow("Live", I2_warp) 
+            #cv2.imshow("Live", I2_warp) 
             # write to gray-scale 
             out.write(I2_warp)
             I1= I2
-            i+=1
+            pbar.update(1)
         else:
             break
     
