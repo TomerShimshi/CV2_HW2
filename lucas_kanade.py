@@ -256,10 +256,14 @@ def lucas_kanade_optical_flow(I1: np.ndarray,
     #######################
     #u = np.zeros(I1.shape)
     #v = np.zeros(I1.shape)
+    
     for i in range(num_levels ,0,-1):
-        temp_u,temp_v = lucas_kanade_step(pyramid_I1[i],pyarmid_I2[i],window_size)
-        u+= temp_u
-        v+= temp_v
+        I2_warped= warp_image(pyarmid_I2[i],u,v)
+        for k in range(max_iter):
+            temp_u,temp_v = lucas_kanade_step(pyramid_I1[i],I2_warped,window_size)
+            u+= temp_u
+            v+= temp_v
+            I2_warped= warp_image(pyarmid_I2[i],u,v)
         dsize = (pyramid_I1[i].T.shape[0]*2,pyramid_I1[i].T.shape[1]*2)
         u = cv2.resize(u,dsize=dsize) * 2#, fx= h_scale, fy= w_scale)
         v = cv2.resize(v,dsize=dsize) * 2#, fx= h_scale, fy= w_scale)
