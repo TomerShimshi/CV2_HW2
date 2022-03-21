@@ -405,13 +405,48 @@ def faster_lucas_kanade_step(I1: np.ndarray,
         (du, dv): tuple of np.ndarray-s. Each one of the shape of the
         original image. dv encodes the shift in rows and du in columns.
     """
-
+    
+    
     du = np.zeros(I1.shape)
     dv = np.zeros(I1.shape)
     """INSERT YOUR CODE HERE.
     Calculate du and dv correctly.
     """
+    h,w = I1.shape
+    lower_h = 75
+    lower_w = 75
+    if h<= lower_h and w< lower_w:
+        return  lucas_kanade_step(I1= I1, I2= I2,window_size=window_size)
+    Ix = signal.convolve2d(I2,X_DERIVATIVE_FILTER,boundary='symm',mode= 'same') 
+    Iy = signal.convolve2d(I2,Y_DERIVATIVE_FILTER,boundary='symm',mode= 'same') 
+    It = I2 - I1
+    h, w = I1.shape
+    du = np.zeros(I1.shape)
+    dv = np.zeros(I1.shape)
+    half_window = window_size//2
+    res = window_size - half_window
+    I2 =np.uint8(I2)
+    dst = cv2.cornerHarris(I2,2,3,0.04)
+    temp_dst = np.where(dst>0.01*dst.max())
+    for cord in temp_dst:
+            Ix_window = Ix[max(0,cord[0] -half_window):min(h,cord[0] + res),max(0,cord[1] -half_window):min(w,cord[1] + res)].flatten()
+            Iy_window = Iy[max(0,cord[0] -half_window):min(h,cord[0] + res),max(0,cord[1] -half_window):min(w,cord[1] + res)].flatten()
+            It_window = It[max(0,cord[0] -half_window):min(h,cord[0] + res),max(0,cord[1] -half_window):min(w,cord[1] + res)].flatten()
+            A= np.vstack((Ix_window,Iy_window)).T
+            try:
+                A_traspose_A = np.dot(np.transpose(A),A)
+                AA_inv= np.linalg.inv(A_traspose_A)
+                AA_inv_A= np.dot(AA_inv,np.transpose(A))
+            
+           
+                delta_p = -np.dot (AA_inv_A,It_window)
+            except:
+                delta_p=(0,0)
+
+            du[cord[0]][cord[1]]+= delta_p[0] 
+            dv[cord[0]][cord[1]] += delta_p[1] 
     return du, dv
+    
 
 
 def faster_lucas_kanade_optical_flow(
@@ -446,11 +481,27 @@ def faster_lucas_kanade_optical_flow(
     v = np.zeros(pyarmid_I2[-1].shape)  # create v in the size of smallest image
     """INSERT YOUR CODE HERE.
     Replace u and v with their true value."""
-    
 
-    u = np.zeros(I1.shape)
-    v = np.zeros(I1.shape)
+    #mybe we dont need this
+    #######################
+    #u = np.zeros(I1.shape)
+    #v = np.zeros(I1.shape)
+    
+    for i in range(num_levels ,0,-1):
+        I2_warped= warp_image(pyarmid_I2[i],u,v)
+        for k in range(max_iter):
+            temp_u,temp_v = faster_lucas_kanade_step(pyramid_I1[i],I2_warped,window_size)
+            u+= temp_u
+            v+= temp_v
+            I2_warped= warp_image(pyarmid_I2[i],u,v)
+        dsize = (pyramid_I1[i].T.shape[0]*2,pyramid_I1[i].T.shape[1]*2)
+        u = cv2.resize(u,dsize=dsize) * 2#, fx= h_scale, fy= w_scale)
+        v = cv2.resize(v,dsize=dsize) * 2#, fx= h_scale, fy= w_scale)
+        #temp_I2_warp = warp_image(pyramid_I1[i],u,v)
+
+    
     return u, v
+    
 
 
 def lucas_kanade_faster_video_stabilization(
@@ -469,7 +520,63 @@ def lucas_kanade_faster_video_stabilization(
         None.
     """
     """INSERT YOUR CODE HERE."""
-    pass
+    cap = cv2.VideoCapture(input_video_path)
+    parameters = get_video_parameters(cap)
+    ret,frame = cap.read()
+    
+    h_factor = int(np.ceil(frame.shape[0] / (2 ** (num_levels - 1 + 1))))
+    w_factor = int(np.ceil(frame.shape[1] / (2 ** (num_levels - 1 + 1))))
+    IMAGE_SIZE = (w_factor * (2 ** (num_levels - 1 + 1)),
+                  h_factor * (2 ** (num_levels - 1 + 1)))
+    out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((frame.shape[1], frame.shape[0])), isColor=False)
+    if ret: 
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY) 
+    out.write(np.uint8(gray))
+    if frame.shape != IMAGE_SIZE:
+        I1 = cv2.resize(gray, IMAGE_SIZE)
+    u = np.zeros(gray.shape)
+    v = np.zeros(gray.shape)
+    half_window = window_size//2
+    res = window_size - half_window
+    # running the loop 
+    i= 0
+    pbar = tqdm(total=79)
+    while cap.isOpened(): 
+        #print('running frame number {}'.format(i))
+        # extracting the frames 
+        ret, img = cap.read() 
+
+        # converting to gray-scale 
+        
+        
+        if ret:
+            
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+            if img.shape != IMAGE_SIZE:
+                I2 = cv2.resize(gray, IMAGE_SIZE)
+            temp_u,temp_v = faster_lucas_kanade_optical_flow(I1,I2,window_size=window_size,max_iter=max_iter,num_levels=num_levels)
+            temp_u= temp_u[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
+            temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
+            mean_temp_u = np.mean(temp_u)
+            mean_temp_v = np.mean(temp_v)
+            #temp_ones = np.ones(u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res].shape)
+            #u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones *mean_temp_u
+            #v[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones*mean_temp_v
+            u+= np.ones(u.shape)* mean_temp_u
+            v+= np.ones(u.shape)* mean_temp_v
+            I2_warp= np.uint8(warp_image(gray,u,v))
+            # displaying the video 
+            #cv2.imshow("Live", I2_warp) 
+            # write to gray-scale 
+            out.write(I2_warp)
+            I1= I2
+            pbar.update(1)
+        else:
+            break
+    
+    cv2.destroyAllWindows() 
+    cap.release()
+    out.release()
 
 
 def lucas_kanade_faster_video_stabilization_fix_effects(
@@ -493,6 +600,66 @@ def lucas_kanade_faster_video_stabilization_fix_effects(
         None.
     """
     """INSERT YOUR CODE HERE."""
-    pass
+    cap = cv2.VideoCapture(input_video_path)
+    parameters = get_video_parameters(cap)
+    ret,frame = cap.read()
+    
+    h_factor = int(np.ceil(frame.shape[0] / (2 ** (num_levels - 1 + 1))))
+    w_factor = int(np.ceil(frame.shape[1] / (2 ** (num_levels - 1 + 1))))
+    IMAGE_SIZE = (w_factor * (2 ** (num_levels - 1 + 1)),
+                  h_factor * (2 ** (num_levels - 1 + 1)))
+    out_size= (frame.shape[0]- (start_rows +end_rows ), frame.shape[1] -(start_cols + end_cols))
+    out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((out_size[1], out_size[0])), isColor=False)
+    if ret: 
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    temp_gray =  gray[start_rows:  gray.shape[0]-end_rows,start_cols:gray.shape[1]-end_cols]
+    out.write(np.uint8(temp_gray))
+    if frame.shape != IMAGE_SIZE:
+        I1 = cv2.resize(gray, IMAGE_SIZE)
+    u = np.zeros(gray.shape)
+    v = np.zeros(gray.shape)
+    half_window = window_size//2
+    res = window_size - half_window
+    # running the loop 
+    i= 0
+    pbar = tqdm(total=79)
+    while cap.isOpened(): 
+        #print('running frame number {}'.format(i))
+        # extracting the frames 
+        ret, img = cap.read() 
+
+        # converting to gray-scale 
+        
+        
+        if ret:
+            
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
+            if img.shape != IMAGE_SIZE:
+                I2 = cv2.resize(gray, IMAGE_SIZE)
+            temp_u,temp_v = faster_lucas_kanade_optical_flow(I1,I2,window_size=window_size,max_iter=max_iter,num_levels=num_levels)
+            temp_u= temp_u[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
+            temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
+            mean_temp_u = np.mean(temp_u)
+            mean_temp_v = np.mean(temp_v)
+            #temp_ones = np.ones(u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res].shape)
+            #u[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones *mean_temp_u
+            #v[half_window:  u.shape[0]-res,half_window:u.shape[1]-res] += temp_ones*mean_temp_v
+            u+= np.ones(u.shape)* mean_temp_u
+            v+= np.ones(u.shape)* mean_temp_v
+            I2_warp= np.uint8(warp_image(gray,u,v))
+            I2_warp = I2_warp[start_rows:  I2_warp.shape[0]-end_rows,start_cols:I2_warp.shape[1]-end_cols] 
+            # displaying the video 
+            #cv2.imshow("Live", I2_warp) 
+            # write to gray-scale 
+            out.write(I2_warp)
+            I1= I2
+            pbar.update(1)
+        else:
+            break
+    
+    cv2.destroyAllWindows() 
+    cap.release()
+    out.release()
+
 
 
