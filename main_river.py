@@ -72,7 +72,7 @@ start_time = time.time()
 (du, dv) = lucas_kanade_step(I1, I2, WINDOW_SIZE_RIVER)
 end_time = time.time()
 statistics['[RIVER, TIME] One Step LK'] = end_time - start_time
-'''
+
 # Warp I2
 I2_one_lk_step = warp_image(I2, du, dv)
 
@@ -129,7 +129,7 @@ img = next(images)
 img.save(fp=os.path.join(RIVER_DIR, '2_after_one_lk_step.gif'),
          format='GIF', append_images=images, save_all=True, duration=200,
          loop=0)
-'''
+
 ################################################################################
 ######################### ONE STEP LUCAS KANADE ENDS HERE ######################
 ################################################################################
@@ -145,9 +145,9 @@ I2_full_lk = warp_image(I2, u, v)
 after_full_lk_mse = calc_mse_at_interest_region(I1,
                                                 I2_full_lk,
                                                 WINDOW_SIZE_RIVER // 2)
-#print(f'MSE of original frames: {original_mse}')
+print(f'MSE of original frames: {original_mse}')
 print(f'MSE after full LK: {after_full_lk_mse}')
-#print(f'MSE ratio full LK: {original_mse / after_full_lk_mse}')
+print(f'MSE ratio full LK: {original_mse / after_full_lk_mse}')
 print(f'Full LK-step took: {end_time - start_time:.2f}[sec]')
 statistics['[RIVER, MSE] Full LK'] = after_full_lk_mse
 

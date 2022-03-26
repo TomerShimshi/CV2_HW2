@@ -58,11 +58,11 @@ input_video_name = 'input.avi'
 output_video_name = f'{ID1}_{ID2}_stabilized_video.avi'
 start_time = time.time()
 
-#lucas_kanade_video_stabilization(input_video_name,
-#                                 output_video_name,
-#                                 WINDOW_SIZE_TAU,
-#                                 MAX_ITER_TAU,
-#                                 NUM_LEVELS_TAU)
+lucas_kanade_video_stabilization(input_video_name,
+                                 output_video_name,
+                                 WINDOW_SIZE_TAU,
+                                 MAX_ITER_TAU,
+                                 NUM_LEVELS_TAU)
 
 end_time = time.time()
 print(f'LK-Video Stabilization Taking all pixels into account took: '
@@ -71,11 +71,11 @@ statistics["[TAU, TIME] naive LK implementation"] = end_time - start_time
 
 faster_output_video_name = f'{ID1}_{ID2}_faster_stabilized_video.avi'
 start_time = time.time()
-#lucas_kanade_faster_video_stabilization(input_video_name,
-#                                        faster_output_video_name,
-#                                        WINDOW_SIZE_TAU,
-#                                        MAX_ITER_TAU,
-#                                        NUM_LEVELS_TAU)
+lucas_kanade_faster_video_stabilization(input_video_name,
+                                        faster_output_video_name,
+                                        WINDOW_SIZE_TAU,
+                                        MAX_ITER_TAU,
+                                        NUM_LEVELS_TAU)
 end_time = time.time()
 print(f'LK-Video Stabilization FASTER implementation took: '
       f'{end_time - start_time:.2f}[sec]')
@@ -84,9 +84,9 @@ statistics["[TAU, TIME] FASTER LK implementation"] = end_time - start_time
 fixed_image_borders_output_video_name = f'{ID1}_{ID2}_' \
                                         f'fixed_borders_stabilized_video.avi'
 start_time = time.time()
-#lucas_kanade_faster_video_stabilization_fix_effects(
-#    input_video_name, fixed_image_borders_output_video_name, WINDOW_SIZE_TAU,
-#    MAX_ITER_TAU, NUM_LEVELS_TAU, start_rows=10, start_cols=2, end_rows=30, end_cols=30)
+lucas_kanade_faster_video_stabilization_fix_effects(
+    input_video_name, fixed_image_borders_output_video_name, WINDOW_SIZE_TAU,
+    MAX_ITER_TAU, NUM_LEVELS_TAU, start_rows=10, start_cols=2, end_rows=30, end_cols=30)
 end_time = time.time()
 print(f'LK-Video Stabilization FASTER implementation took WITHOUT BORDERS: '
       f'{end_time - start_time:.2f}[sec]')
