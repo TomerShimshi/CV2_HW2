@@ -338,6 +338,8 @@ def lucas_kanade_video_stabilization(input_video_path: str,
     out.write(np.uint8(gray))
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
+    else:
+                I1 = gray
     u = np.zeros(gray.shape)
     v = np.zeros(gray.shape)
     half_window = window_size//2
@@ -358,6 +360,8 @@ def lucas_kanade_video_stabilization(input_video_path: str,
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
             if img.shape != IMAGE_SIZE:
                 I2 = cv2.resize(gray, IMAGE_SIZE)
+            else:
+                I2 = gray
             temp_u,temp_v = lucas_kanade_optical_flow(I1,I2,window_size=window_size,max_iter=max_iter,num_levels=num_levels)
             temp_u= temp_u[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
             temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
@@ -534,6 +538,8 @@ def lucas_kanade_faster_video_stabilization(
     out.write(np.uint8(gray))
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
+    else:
+        I1 = gray
     u = np.zeros(gray.shape)
     v = np.zeros(gray.shape)
     half_window = window_size//2
@@ -554,6 +560,8 @@ def lucas_kanade_faster_video_stabilization(
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
             if img.shape != IMAGE_SIZE:
                 I2 = cv2.resize(gray, IMAGE_SIZE)
+            else:
+                I2 = gray
             temp_u,temp_v = faster_lucas_kanade_optical_flow(I1,I2,window_size=window_size,max_iter=max_iter,num_levels=num_levels)
             temp_u= temp_u[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
             temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
@@ -616,6 +624,8 @@ def lucas_kanade_faster_video_stabilization_fix_effects(
     out.write(np.uint8(temp_gray))
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
+    else:
+       I2 = gray
     u = np.zeros(gray.shape)
     v = np.zeros(gray.shape)
     half_window = window_size//2
@@ -636,6 +646,8 @@ def lucas_kanade_faster_video_stabilization_fix_effects(
             gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
             if img.shape != IMAGE_SIZE:
                 I2 = cv2.resize(gray, IMAGE_SIZE)
+            else:
+                I2 = gray
             temp_u,temp_v = faster_lucas_kanade_optical_flow(I1,I2,window_size=window_size,max_iter=max_iter,num_levels=num_levels)
             temp_u= temp_u[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]
             temp_v = temp_v[half_window:  temp_u.shape[0]-res,half_window:temp_u.shape[1]-res]

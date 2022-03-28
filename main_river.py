@@ -62,9 +62,7 @@ I2 = cv2.cvtColor(cv2.imread('river2.png'), cv2.COLOR_RGB2GRAY)
 
 
 
-################# DELETE THIS###################### 
-###################################################
-##################################################
+
 
 
 # Compute optical flow using LK algorithm
