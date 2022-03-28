@@ -7,8 +7,8 @@ from scipy.interpolate import griddata
 
 
 # FILL IN YOUR ID
-ID1 = 123456789
-ID2 = 987654321
+ID1 = 203200480
+ID2 = 320521461
 
 
 PYRAMID_FILTER = 1.0 / 256 * np.array([[1, 4, 6, 4, 1],
@@ -339,7 +339,7 @@ def lucas_kanade_video_stabilization(input_video_path: str,
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
     else:
-                I1 = gray
+        I1 = gray
     u = np.zeros(gray.shape)
     v = np.zeros(gray.shape)
     half_window = window_size//2
@@ -477,6 +477,7 @@ def faster_lucas_kanade_optical_flow(
                   h_factor * (2 ** num_levels))
     if I1.shape != IMAGE_SIZE:
         I1 = cv2.resize(I1, IMAGE_SIZE)
+    
     if I2.shape != IMAGE_SIZE:
         I2 = cv2.resize(I2, IMAGE_SIZE)
     pyramid_I1 = build_pyramid(I1, num_levels)  # create levels list for I1
@@ -625,7 +626,7 @@ def lucas_kanade_faster_video_stabilization_fix_effects(
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
     else:
-       I2 = gray
+        I1 = gray
     u = np.zeros(gray.shape)
     v = np.zeros(gray.shape)
     half_window = window_size//2
