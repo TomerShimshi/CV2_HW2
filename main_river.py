@@ -6,18 +6,16 @@ import numpy as np
 import matplotlib.pyplot as plt
 from collections import OrderedDict
 from PIL import Image
-from lucas_kanade import lucas_kanade_optical_flow, warp_image, \
-    lucas_kanade_step
-
+from lucas_kanade import lucas_kanade_optical_flow ,warp_image, lucas_kanade_step
 
 # FILL IN YOUR ID
 ID1 = '203200480'
 ID2 = '320521461'
 
 # Choose parameters
-WINDOW_SIZE_RIVER = 5  # Add your value here!
-MAX_ITER_RIVER = 10  # Add your value here!
-NUM_LEVELS_RIVER = 5
+WINDOW_SIZE_RIVER = 4  # Add your value here!
+MAX_ITER_RIVER = 8  # Add your value here!
+NUM_LEVELS_RIVER = 6
 
 # Output dir and statistics file preparations:
 RIVER_DIR = 'river_results'

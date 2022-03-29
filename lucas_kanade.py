@@ -43,7 +43,7 @@ def get_video_parameters(capture: cv2.VideoCapture) -> dict:
             "frame_count": frame_count}
 
 
-def build_pyramid(image: np.ndarray, num_levels: int) -> list[np.ndarray]:
+def build_pyramid(image: np.ndarray, num_levels: int):# -> list[np.ndarray]:
     """Coverts image to a pyramid list of size num_levels.
 
     First, create a list with the original image in it. Then, iterate over the
@@ -75,7 +75,7 @@ def build_pyramid(image: np.ndarray, num_levels: int) -> list[np.ndarray]:
 
 def lucas_kanade_step(I1: np.ndarray,
                       I2: np.ndarray,
-                      window_size: int) -> tuple[np.ndarray, np.ndarray]:
+                      window_size: int) :#-> tuple[np.ndarray, np.ndarray]:
     """Perform one Lucas-Kanade Step.
 
     This method receives two images as inputs and a window_size. It
@@ -175,7 +175,7 @@ def warp_image(image: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
     Replace image_warp with something else.
     """
     h, w = image.shape
-    h_scale, w_scale = (h// u.shape[0], w // u.shape[1])
+    h_scale, w_scale = (h/ u.shape[0], w / u.shape[1])
     dsize= image.T.shape
     u = cv2.resize(u,dsize=dsize) * h_scale#, fx= h_scale, fy= w_scale)
     v = cv2.resize(v,dsize=dsize) * w_scale#, fx= h_scale, fy= w_scale)
@@ -198,7 +198,7 @@ def lucas_kanade_optical_flow(I1: np.ndarray,
                               I2: np.ndarray,
                               window_size: int,
                               max_iter: int,
-                              num_levels: int) -> tuple[np.ndarray, np.ndarray]:
+                              num_levels: int): #-> tuple[np.ndarray, np.ndarray]:
     """Calculate LK Optical Flow for max iterations in num-levels.
 
     Args:
@@ -257,7 +257,7 @@ def lucas_kanade_optical_flow(I1: np.ndarray,
     #u = np.zeros(I1.shape)
     #v = np.zeros(I1.shape)
     
-    for i in range(num_levels ,0,-1):
+    for i in range(num_levels ,-1,-1):
         I2_warped= warp_image(pyarmid_I2[i],u,v)
         for k in range(max_iter):
             temp_u,temp_v = lucas_kanade_step(pyramid_I1[i],I2_warped,window_size)
@@ -389,7 +389,7 @@ def lucas_kanade_video_stabilization(input_video_path: str,
 
 def faster_lucas_kanade_step(I1: np.ndarray,
                              I2: np.ndarray,
-                             window_size: int) -> tuple[np.ndarray, np.ndarray]:
+                             window_size: int):# -> tuple[np.ndarray, np.ndarray]:
     """Faster implementation of a single Lucas-Kanade Step.
 
     (1) If the image is small enough (you need to design what is good
@@ -455,7 +455,7 @@ def faster_lucas_kanade_step(I1: np.ndarray,
 
 def faster_lucas_kanade_optical_flow(
         I1: np.ndarray, I2: np.ndarray, window_size: int, max_iter: int,
-        num_levels: int) -> tuple[np.ndarray, np.ndarray]:
+        num_levels: int):# ->  tuple[np.ndarray, np.ndarray]:
     """Calculate LK Optical Flow for max iterations in num-levels .
 
     Use faster_lucas_kanade_step instead of lucas_kanade_step.
