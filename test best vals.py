@@ -14,8 +14,12 @@ ID2 = '320521461'
 
 # Choose parameters
 WINDOW_SIZE_RIVER = 4  # Add your value here!
-MAX_ITER_RIVER = 7  # Add your value here!
-NUM_LEVELS_RIVER = 2
+MAX_ITER_RIVER = 8  # Add your value here!
+NUM_LEVELS_RIVER = 6
+
+min_MSE=700
+best_vals = np.zeros(3)
+
 
 # Output dir and statistics file preparations:
 RIVER_DIR = 'river_results'
@@ -129,55 +133,34 @@ img.save(fp=os.path.join(RIVER_DIR, '2_after_one_lk_step.gif'),
 ################################################################################
 ######################### ONE STEP LUCAS KANADE ENDS HERE ######################
 ################################################################################
+for WINDOW_SIZE_RIVER in range(2,8):#this is the window size
+    for MAX_ITER_RIVER in range(2,15): #iter num
+        for NUM_LEVELS_RIVER in range(2,8):
+            # calculate LK optical flow:
+            start_time = time.time()
+            (u, v) = lucas_kanade_optical_flow(I1, I2, WINDOW_SIZE_RIVER, MAX_ITER_RIVER,
+                                               NUM_LEVELS_RIVER)
+            end_time = time.time()
+            statistics['[RIVER, TIME] Full LK'] = end_time - start_time
 
-# calculate LK optical flow:
-start_time = time.time()
-(u, v) = lucas_kanade_optical_flow(I1, I2, WINDOW_SIZE_RIVER, MAX_ITER_RIVER,
-                                   NUM_LEVELS_RIVER)
-end_time = time.time()
-statistics['[RIVER, TIME] Full LK'] = end_time - start_time
+            I2_full_lk = warp_image(I2, u, v)
+            after_full_lk_mse = calc_mse_at_interest_region(I1,
+                                                            I2_full_lk,
+                                                            WINDOW_SIZE_RIVER // 2)
+            print(f'MSE of original frames: {original_mse}')
+            print(f'MSE after full LK: {after_full_lk_mse}')
+            print('the best window size is {}'.format(best_vals[0]))
+            print('the best ITER size is {}'.format(best_vals[1]))
+            print('the best NUM_LEVELS_RIVER size is {}'.format(best_vals[2]))
+            print('the best after_full_lk_mse is {}'.format(after_full_lk_mse))
 
-I2_full_lk = warp_image(I2, u, v)
-after_full_lk_mse = calc_mse_at_interest_region(I1,
-                                                I2_full_lk,
-                                                WINDOW_SIZE_RIVER // 2)
-print(f'MSE of original frames: {original_mse}')
-print(f'MSE after full LK: {after_full_lk_mse}')
-print(f'MSE ratio full LK: {original_mse / after_full_lk_mse}')
-print(f'Full LK-step took: {end_time - start_time:.2f}[sec]')
-statistics['[RIVER, MSE] Full LK'] = after_full_lk_mse
+            if after_full_lk_mse < min_MSE:
+                best_vals[0] = WINDOW_SIZE_RIVER
+                best_vals[1] = MAX_ITER_RIVER
+                best_vals[2] = NUM_LEVELS_RIVER
+                min_MSE = after_full_lk_mse
 
-
-plt.subplot(2, 2, 1)
-plt.title('du')
-plt.imshow(du, cmap='gray')
-plt.subplot(2, 2, 2)
-plt.title('dv')
-plt.imshow(dv, cmap='gray')
-plt.subplot(2, 3, 4)
-plt.title('I1')
-plt.imshow(I1, cmap='gray')
-plt.subplot(2, 3, 5)
-plt.title('I2 warped to I1')
-plt.imshow(I2_full_lk, cmap='gray')
-plt.subplot(2, 3, 6)
-plt.title('I2')
-plt.imshow(I2, cmap='gray')
-fig = plt.gcf()
-fig.set_size_inches(8, 8)
-plt.suptitle('Full Lucas-Kanade Algorithm')
-plt.savefig(os.path.join(RIVER_DIR, 'river_full_LK_step_result.png'))
-
-# greate full LK algorithm result for river image as a gif:
-cv2.imwrite(os.path.join(RIVER_DIR, 'river2_warped_full_lk.png'),
-            I2_full_lk.astype(np.uint8))
-image_paths = [os.path.join(RIVER_DIR, x)
-          for x in ['river1.png', 'river2_warped_full_lk.png']]
-images = (Image.open(f) for f in image_paths)
-img = next(images)
-img.save(fp=os.path.join('river_results', '3_after_full_lk.gif'),
-         format='GIF', append_images=images, save_all=True, duration=200,
-         loop=0)
-
-with open(STATISTICS_PATH, 'w') as f:
-    json.dump(statistics, f, indent=4)
+print('the best window size is {}'.format(best_vals[0]))
+print('the best ITER size is {}'.format(best_vals[1]))
+print('the best NUM_LEVELS_RIVER size is {}'.format(best_vals[2]))
+print('the best after_full_lk_mse is {}'.format(min_MSE))

@@ -257,7 +257,7 @@ def lucas_kanade_optical_flow(I1: np.ndarray,
     #u = np.zeros(I1.shape)
     #v = np.zeros(I1.shape)
     
-    for i in range(num_levels ,-1,-1):
+    for i in range(num_levels ,0,-1):
         I2_warped= warp_image(pyarmid_I2[i],u,v)
         for k in range(max_iter):
             temp_u,temp_v = lucas_kanade_step(pyramid_I1[i],I2_warped,window_size)
