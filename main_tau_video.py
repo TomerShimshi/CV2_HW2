@@ -12,9 +12,9 @@ ID1 = '203200480'
 ID2 = '320521461'
 
 # Choose parameters
-WINDOW_SIZE_TAU = 4  # Add your value here!
-MAX_ITER_TAU = 4  # Add your value here!
-NUM_LEVELS_TAU = 4  # Add your value here!
+WINDOW_SIZE_TAU = 5  # Add your value here!
+MAX_ITER_TAU = 5  # Add your value here!
+NUM_LEVELS_TAU = 5  # Add your value here!
 
 
 # Output dir and statistics file preparations:

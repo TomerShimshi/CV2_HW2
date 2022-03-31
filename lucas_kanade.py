@@ -378,6 +378,7 @@ def lucas_kanade_video_stabilization(input_video_path: str,
             # write to gray-scale 
             out.write(I2_warp)
             I1= I2
+            
             pbar.update(1)
         else:
             break
@@ -579,6 +580,7 @@ def lucas_kanade_faster_video_stabilization(
             # write to gray-scale 
             out.write(I2_warp)
             I1= I2
+            #I1 = I2_warp
             pbar.update(1)
         else:
             break
@@ -618,11 +620,12 @@ def lucas_kanade_faster_video_stabilization_fix_effects(
     IMAGE_SIZE = (w_factor * (2 ** (num_levels - 1 + 1)),
                   h_factor * (2 ** (num_levels - 1 + 1)))
     out_size= (frame.shape[0]- (start_rows +end_rows ), frame.shape[1] -(start_cols + end_cols))
-    out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((out_size[1], out_size[0])), isColor=False)
+    #out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((out_size[1], out_size[0])), isColor=False)
+    out = cv2.VideoWriter(output_video_path ,cv2.VideoWriter_fourcc(*'XVID'),parameters['fps'],((frame.shape[1], frame.shape[0])), isColor=False)
     if ret: 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     temp_gray =  gray[start_rows:  gray.shape[0]-end_rows,start_cols:gray.shape[1]-end_cols]
-    out.write(np.uint8(temp_gray))
+    out.write(np.uint8(gray))
     if frame.shape != IMAGE_SIZE:
         I1 = cv2.resize(gray, IMAGE_SIZE)
     else:
@@ -661,11 +664,13 @@ def lucas_kanade_faster_video_stabilization_fix_effects(
             v+= np.ones(u.shape)* mean_temp_v
             I2_warp= np.uint8(warp_image(gray,u,v))
             I2_warp = I2_warp[start_rows:  I2_warp.shape[0]-end_rows,start_cols:I2_warp.shape[1]-end_cols] 
+            I2_warp = cv2.resize(I2_warp,(frame.shape[1], frame.shape[0]))
             # displaying the video 
             #cv2.imshow("Live", I2_warp) 
             # write to gray-scale 
             out.write(I2_warp)
             I1= I2
+            #I1 = I2_warp
             pbar.update(1)
         else:
             break
