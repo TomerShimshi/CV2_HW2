@@ -175,7 +175,7 @@ def warp_image(image: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
     Replace image_warp with something else.
     """
     h, w = image.shape
-    h_scale, w_scale = (h/ u.shape[0], w / u.shape[1])
+    h_scale, w_scale = (h// u.shape[0], w // u.shape[1])
     dsize= image.T.shape
     u = cv2.resize(u,dsize=dsize) * h_scale#, fx= h_scale, fy= w_scale)
     v = cv2.resize(v,dsize=dsize) * w_scale#, fx= h_scale, fy= w_scale)
